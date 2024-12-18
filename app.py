@@ -1,3 +1,4 @@
+import requests
 import copy
 import json
 import os
@@ -5,6 +6,9 @@ import logging
 import uuid
 import httpx
 import asyncio
+from azure.search.documents import SearchClient
+from azure.core.credentials import AzureKeyCredential
+from openai import AzureOpenAI
 from quart import (
     Blueprint,
     Quart,
@@ -34,6 +38,10 @@ from backend.utils import (
     format_non_streaming_response,
     convert_to_pf_format,
     format_pf_non_streaming_response,
+)
+
+from searchengine import (
+    QueryEngine,
 )
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
@@ -205,7 +213,6 @@ async def init_cosmosdb_client():
 
     return cosmos_conversation_client
 
-
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
@@ -235,7 +242,42 @@ def prepare_model_args(request_body, request_headers):
                         "content": message["content"]
                     }
                 )
+    
+    bing_custom_config_id = app_settings.azure_openai.bing_custom_config_id
+    bing_access_key = app_settings.azure_openai.bing_access_key
+    apiKey =  app_settings.azure_openai.key
+    endpoint =  app_settings.azure_openai.endpoint
 
+    google_access_key = app_settings.azure_openai.google_access_key
+    google_search_engine_id = app_settings.azure_openai.google_search_engine_id
+
+    search_client = SearchClient(
+                endpoint=  app_settings.azure_openai.embedding_endpoint,
+                index_name= app_settings.azure_openai.search_index,
+                credential=AzureKeyCredential(app_settings.azure_openai.embedding_key)
+            )
+
+    openAiClient = AzureOpenAI(
+            api_version="2024-07-01-preview",
+            azure_endpoint= endpoint,
+            api_key = apiKey,
+        )
+
+
+    queryEngine = QueryEngine(openAiClient, search_client, bing_access_key, bing_custom_config_id, google_access_key, google_search_engine_id)
+
+    user_query = queryEngine.refine_query(messages)
+    bingContext = queryEngine.search_google(user_query)
+    azureContext = queryEngine.search_index(user_query)
+    
+    messages.append({
+                         "role": "system",
+                         "content": f"Bing results: {bingContext}"
+                     })
+    messages.append({
+                         "role": "system",
+                         "content": f"Azure results: {azureContext}"
+                     })
     user_json = None
     if (MS_DEFENDER_ENABLED):
         authenticated_user_details = get_authenticated_user_details(request_headers)
@@ -254,14 +296,14 @@ def prepare_model_args(request_body, request_headers):
         "user": user_json
     }
 
-    if app_settings.datasource:
-        model_args["extra_body"] = {
-            "data_sources": [
-                app_settings.datasource.construct_payload_configuration(
-                    request=request
-                )
-            ]
-        }
+    # if app_settings.datasource:
+    #     model_args["extra_body"] = {
+    #         "data_sources": [
+    #             app_settings.datasource.construct_payload_configuration(
+    #                 request=request
+    #             )
+    #         ]
+    #     }
 
     model_args_clean = copy.deepcopy(model_args)
     if model_args_clean.get("extra_body"):
@@ -390,7 +432,7 @@ async def conversation_internal(request_body, request_headers):
             result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
-            response.mimetype = "application/json-lines"
+            response.mimetype = "application/json"
             return response
         else:
             result = await complete_chat_request(request_body, request_headers)
@@ -410,7 +452,8 @@ async def conversation():
         return jsonify({"error": "request must be json"}), 415
     request_json = await request.get_json()
 
-    return await conversation_internal(request_json, request.headers)
+    result = await conversation_internal(request_json, request.headers)
+    return result
 
 
 @bp.route("/frontend_settings", methods=["GET"])

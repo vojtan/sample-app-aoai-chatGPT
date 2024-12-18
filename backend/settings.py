@@ -123,6 +123,12 @@ class _AzureOpenAISettings(BaseSettings):
     embedding_endpoint: Optional[str] = None
     embedding_key: Optional[str] = None
     embedding_name: Optional[str] = None
+    bing_access_key: Optional[str] = None
+    bing_custom_config_id: Optional[str] = None
+    
+    google_access_key: Optional[str] = None
+    google_search_engine_id: Optional[str] = None
+    search_index: Optional[str] = None
     
     @field_validator('tools', mode='before')
     @classmethod
@@ -204,6 +210,7 @@ class _SearchCommonSettings(BaseSettings):
         extra="ignore",
         env_ignore_empty=True
     )
+    index: Optional[str] = None
     max_search_queries: Optional[int] = None
     allow_partial_result: bool = False
     include_contexts: Optional[List[str]] = ["citations", "intent"]

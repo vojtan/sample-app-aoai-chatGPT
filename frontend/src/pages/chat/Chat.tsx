@@ -836,7 +836,7 @@ const Chat = () => {
                     <div className={styles.chatMessageGpt}>
                       <Answer
                         answer={{
-                          answer: "Generating answer...",
+                          answer: "Generuji odpověď...",
                           citations: [],
                           generated_chart: null
                         }}
@@ -933,7 +933,7 @@ const Chat = () => {
               </Stack>
               <QuestionInput
                 clearOnSend
-                placeholder="Type a new question..."
+                placeholder="Sem napište svou otázku..."
                 disabled={isLoading}
                 onSend={(question, id) => {
                   appStateContext?.state.isCosmosDBAvailable?.cosmosDB
@@ -956,11 +956,11 @@ const Chat = () => {
                 horizontalAlign="space-between"
                 verticalAlign="center">
                 <span aria-label="Citations" className={styles.citationPanelHeader}>
-                  Citations
+                  Citace
                 </span>
                 <IconButton
                   iconProps={{ iconName: 'Cancel' }}
-                  aria-label="Close citations panel"
+                  aria-label="Zavřít"
                   onClick={() => setIsCitationPanelOpen(false)}
                 />
               </Stack>
