@@ -92,115 +92,138 @@ class _AzureOpenAITool(BaseModel):
     type: Literal['function'] = 'function'
     function: _AzureOpenAIFunction
     
-
-class _AzureOpenAISettings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_prefix="AZURE_OPENAI_",
-        env_file=DOTENV_PATH,
-        extra='ignore',
-        env_ignore_empty=True
-    )
-    
-    model: str
-    key: Optional[str] = None
-    resource: Optional[str] = None
-    endpoint: Optional[str] = None
-    temperature: float = 0
-    top_p: float = 0
-    max_tokens: int = 1000
+class _AzureOpenAISettings2(BaseSettings):
+    bing_access_key: Optional[str] = os.getenv("azure_openai_bing_access_key")
+    bing_custom_config_id: Optional[str] = os.getenv("azure_openai_bing_custom_config_id")
     stream: bool = True
-    stop_sequence: Optional[List[str]] = None
-    seed: Optional[int] = None
+    google_access_key: Optional[str] = os.getenv("azure_openai_access_key")
+    google_search_engine_id: Optional[str] = os.getenv("azure_openai_google_search_engine_id")
+    search_index: Optional[str] = os.getenv("azure_openai_search_index")
+    model: str = os.getenv("azure_openai_model")
+    key: Optional[str] = os.getenv("azure_openai_key")
+    resource: Optional[str] = os.getenv("azure_openai_resource")
+    endpoint: Optional[str] = os.getenv("azure_openai_endpoint")
+    temperature: float = os.getenv("azure_openai_temperature")
+    top_p: float = os.getenv("azure_openai_top_p")
+    max_tokens: int = os.getenv("azure_openai_max_tokens")
+    stream: bool = bool(os.getenv("azure_openai_system_stream", True))
+    stop_sequence: Optional[List[str]] = os.getenv("azure_openai_stop_sequence", "").split(",") if os.getenv("azure_openai_stop_sequence") else None
+    seed: Optional[int] = int(os.getenv("azure_openai_seed", 0)) if os.getenv("azure_openai_seed") else None
     choices_count: Optional[conint(ge=1, le=128)] = Field(default=1, serialization_alias="n")
-    user: Optional[str] = None
-    tools: Optional[conlist(_AzureOpenAITool, min_length=1)] = None
-    tool_choice: Optional[str] = None
-    logit_bias: Optional[dict] = None
-    presence_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
-    frequency_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
-    system_message: str = "You are an AI assistant that helps people find information."
-    preview_api_version: str = MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
-    embedding_endpoint: Optional[str] = None
-    embedding_key: Optional[str] = None
-    embedding_name: Optional[str] = None
-    bing_access_key: Optional[str] = None
-    bing_custom_config_id: Optional[str] = None
+    user: Optional[str] = os.getenv("azure_openai_user", "default_user")
+    tools: Optional[List[str]] = os.getenv("azure_openai_tools", "").split(",") if os.getenv("azure_openai_tools") else None
+    tool_choice: Optional[str] = os.getenv("azure_openai_tool_choice", "default_tool")
+    logit_bias: Optional[dict] = eval(os.getenv("azure_openai_logit_bias", "{}"))
+    presence_penalty: Optional[confloat(ge=-2.0, le=2.0)] = float(os.getenv("azure_openai_presence_penalty", 0.0))
+    frequency_penalty: Optional[confloat(ge=-2.0, le=2.0)] = float(os.getenv("azure_openai_frequency_penalty", 0.0))
+    system_message: str = os.getenv("azure_openai_system_message", "Default system message")
+    preview_api_version: str = os.getenv("azure_openai_preview_api_version", MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION)
+    embedding_endpoint: Optional[str] = os.getenv("azure_openai_embedding_endpoint", "://default-endpoint")
+    embedding_key: Optional[str] = os.getenv("azure_openai_embedding_key", "")
+    embedding_name: Optional[str] = os.getenv("azure_openai_embedding_name", "")
     
-    google_access_key: Optional[str] = None
-    google_search_engine_id: Optional[str] = None
-    search_index: Optional[str] = None
+class _AzureOpenAISettings():
     
-    @field_validator('tools', mode='before')
-    @classmethod
-    def deserialize_tools(cls, tools_json_str: str) -> List[_AzureOpenAITool]:
-        if isinstance(tools_json_str, str):
-            try:
-                tools_dict = json.loads(tools_json_str)
-                return _AzureOpenAITool(**tools_dict)
-            except json.JSONDecodeError:
-                logging.warning("No valid tool definition found in the environment.  If you believe this to be in error, please check that the value of AZURE_OPENAI_TOOLS is a valid JSON string.")
+    # model: str = os.getenv("azure_openai_model")
+    # key: Optional[str] = os.getenv("azure_openai_key")
+    # resource: Optional[str] = os.getenv("azure_openai_resource")
+    # endpoint: Optional[str] = os.getenv("azure_openai_endpoint")
+    # temperature: float = os.getenv("azure_openai_temperature")
+    # top_p: float = os.getenv("azure_openai_top_p")
+    # max_tokens: int = os.getenv("azure_openai_max_tokens")
+    # stream: bool = os.getenv("azure_openai_system_stream")
+    # stop_sequence: Optional[List[str]] = os.getenv("azure_openai_stop_sequence")
+    # seed: Optional[int] = os.getenv("azure_openai_seed")
+    # choices_count: Optional[conint(ge=1, le=128)] = Field(default=1, serialization_alias="n")
+    # user: Optional[str] = os.getenv("azure_openai_user")
+    # tools: Optional[conlist(_AzureOpenAITool, min_length=1)] = os.getenv("azure_openai_tools")
+    # tool_choice: Optional[str] = os.getenv("azure_openai_tool_choice")
+    # logit_bias: Optional[dict] = os.getenv("azure_openai_logit_bias")
+    # presence_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
+    # frequency_penalty: Optional[confloat(ge=-2.0, le=2.0)] = 0.0
+    # system_message: str = os.getenv("azure_openai_system_message")
+    # preview_api_version: str = MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
+    # embedding_endpoint: Optional[str] = os.getenv("azure_openai_embedding_endpoint")
+    # embedding_key: Optional[str] = os.getenv("azure_openai_embedding_key")
+    # embedding_name: Optional[str] = os.getenv("azure_openai_embedding_name")
+    bing_access_key: Optional[str] = os.getenv("azure_openai_bing_access_key")
+    bing_custom_config_id: Optional[str] = os.getenv("azure_openai_bing_custom_config_id")
+    
+    google_access_key: Optional[str] = os.getenv("azure_openai_access_key")
+    google_search_engine_id: Optional[str] = os.getenv("azure_openai_google_search_engine_id")
+    search_index: Optional[str] = os.getenv("azure_openai_search_index")
+    
+    # @field_validator('tools', mode='before')
+    # @classmethod
+    # def deserialize_tools(cls, tools_json_str: str) -> List[_AzureOpenAITool]:
+    #     if isinstance(tools_json_str, str):
+    #         try:
+    #             tools_dict = json.loads(tools_json_str)
+    #             return _AzureOpenAITool(**tools_dict)
+    #         except json.JSONDecodeError:
+    #             logging.warning("No valid tool definition found in the environment.  If you believe this to be in error, please check that the value of AZURE_OPENAI_TOOLS is a valid JSON string.")
             
-            except ValidationError as e:
-                logging.warning(f"An error occurred while deserializing the tool definition - {str(e)}")
+    #         except ValidationError as e:
+    #             logging.warning(f"An error occurred while deserializing the tool definition - {str(e)}")
             
-        return None
+    #     return None
     
-    @field_validator('logit_bias', mode='before')
-    @classmethod
-    def deserialize_logit_bias(cls, logit_bias_json_str: str) -> dict:
-        if isinstance(logit_bias_json_str, str):
-            try:
-                return json.loads(logit_bias_json_str)
-            except json.JSONDecodeError as e:
-                logging.warning(f"An error occurred while deserializing the logit bias string -- {str(e)}")
+    # @field_validator('logit_bias', mode='before')
+    # @classmethod
+    # def deserialize_logit_bias(cls, logit_bias_json_str: str) -> dict:
+    #     if isinstance(logit_bias_json_str, str):
+    #         try:
+    #             return json.loads(logit_bias_json_str)
+    #         except json.JSONDecodeError as e:
+    #             logging.warning(f"An error occurred while deserializing the logit bias string -- {str(e)}")
                 
-        return None
+    #     return None
         
-    @field_validator('stop_sequence', mode='before')
-    @classmethod
-    def split_contexts(cls, comma_separated_string: str) -> List[str]:
-        if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
-            return parse_multi_columns(comma_separated_string)
+    # @field_validator('stop_sequence', mode='before')
+    # @classmethod
+    # def split_contexts(cls, comma_separated_string: str) -> List[str]:
+    #     if isinstance(comma_separated_string, str) and len(comma_separated_string) > 0:
+    #         return parse_multi_columns(comma_separated_string)
         
-        return None
+    #     return None
     
-    @model_validator(mode="after")
-    def ensure_endpoint(self) -> Self:
-        if self.endpoint:
-            return Self
+    # @model_validator(mode="after")
+    # def ensure_endpoint(self) -> Self:
+    #     if self.endpoint:
+    #         return Self
         
-        elif self.resource:
-            self.endpoint = f"https://{self.resource}.openai.azure.com"
-            return Self
+    #     elif self.resource:
+    #         self.endpoint = f"https://{self.resource}.openai.azure.com"
+    #         return Self
         
-        raise ValidationError("AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required")
+    #     raise ValidationError("AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required")
         
-    def extract_embedding_dependency(self) -> Optional[dict]:
-        if self.embedding_name:
-            return {
-                "type": "deployment_name",
-                "deployment_name": self.embedding_name
-            }
-        elif self.embedding_endpoint:
-            if self.embedding_key:
-                return {
-                    "type": "endpoint",
-                    "endpoint": self.embedding_endpoint,
-                    "authentication": {
-                        "type": "api_key",
-                        "key": self.embedding_key
-                    }
-                }
-            else:
-                return {
-                    "type": "endpoint",
-                    "endpoint": self.embedding_endpoint,
-                    "authentication": {
-                        "type": "system_assigned_managed_identity"
-                    }
-                }
-        else:   
-            return None
+    # def extract_embedding_dependency(self) -> Optional[dict]:
+    #     if self.embedding_name:
+    #         return {
+    #             "type": "deployment_name",
+    #             "deployment_name": self.embedding_name
+    #         }
+    #     elif self.embedding_endpoint:
+    #         if self.embedding_key:
+    #             return {
+    #                 "type": "endpoint",
+    #                 "endpoint": self.embedding_endpoint,
+    #                 "authentication": {
+    #                     "type": "api_key",
+    #                     "key": self.embedding_key
+    #                 }
+    #             }
+    #         else:
+    #             return {
+    #                 "type": "endpoint",
+    #                 "endpoint": self.embedding_endpoint,
+    #                 "authentication": {
+    #                     "type": "system_assigned_managed_identity"
+    #                 }
+    #             }
+    #     else:   
+    #         return None
     
 
 class _SearchCommonSettings(BaseSettings):
@@ -767,7 +790,7 @@ class _BaseSettings(BaseSettings):
 
 class _AppSettings(BaseModel):
     base_settings: _BaseSettings = _BaseSettings()
-    azure_openai: _AzureOpenAISettings = _AzureOpenAISettings()
+    azure_openai: _AzureOpenAISettings2 = _AzureOpenAISettings2()
     search: _SearchCommonSettings = _SearchCommonSettings()
     ui: Optional[_UiSettings] = _UiSettings()
     
