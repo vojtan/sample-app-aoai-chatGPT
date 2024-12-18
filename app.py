@@ -248,8 +248,8 @@ def prepare_model_args(request_body, request_headers):
     apiKey =  app_settings.azure_openai.key
     endpoint =  app_settings.azure_openai.endpoint
 
-    google_access_key = app_settings.azure_openai.google_access_key
-    google_search_engine_id = app_settings.azure_openai.google_search_engine_id
+    google_access_key = "AIzaSyD5e8Bg7VL3KcitV881hNi_re1Jd8djVvw" #app_settings.azure_openai.google_access_key
+    google_search_engine_id = "e3618893efe9f4056"# app_settings.azure_openai.google_search_engine_id
 
     search_client = SearchClient(
                 endpoint=  app_settings.azure_openai.embedding_endpoint,
