@@ -92,20 +92,20 @@ class _AzureOpenAITool(BaseModel):
     type: Literal['function'] = 'function'
     function: _AzureOpenAIFunction
     
-class _AzureOpenAISettings2(BaseSettings):
+class AzureOpenAISettings2():
     bing_access_key: Optional[str] = os.getenv("azure_openai_bing_access_key")
     bing_custom_config_id: Optional[str] = os.getenv("azure_openai_bing_custom_config_id")
     stream: bool = True
-    google_access_key: Optional[str] = os.getenv("azure_openai_access_key")
+    google_access_key: Optional[str] = os.getenv("azure_openai_google_access_key")
     google_search_engine_id: Optional[str] = os.getenv("azure_openai_google_search_engine_id")
     search_index: Optional[str] = os.getenv("azure_openai_search_index")
     model: str = os.getenv("azure_openai_model")
     key: Optional[str] = os.getenv("azure_openai_key")
     resource: Optional[str] = os.getenv("azure_openai_resource")
     endpoint: Optional[str] = os.getenv("azure_openai_endpoint")
-    temperature: float = os.getenv("azure_openai_temperature")
-    top_p: float = os.getenv("azure_openai_top_p")
-    max_tokens: int = os.getenv("azure_openai_max_tokens")
+    temperature: float = float(os.getenv("azure_openai_temperature"))
+    top_p: float = float(os.getenv("azure_openai_top_p", 0.95))
+    max_tokens: int = int(os.getenv("azure_openai_max_tokens", 800))
     stream: bool = bool(os.getenv("azure_openai_system_stream", True))
     stop_sequence: Optional[List[str]] = os.getenv("azure_openai_stop_sequence", "").split(",") if os.getenv("azure_openai_stop_sequence") else None
     seed: Optional[int] = int(os.getenv("azure_openai_seed", 0)) if os.getenv("azure_openai_seed") else None
@@ -790,7 +790,7 @@ class _BaseSettings(BaseSettings):
 
 class _AppSettings(BaseModel):
     base_settings: _BaseSettings = _BaseSettings()
-    azure_openai: _AzureOpenAISettings2 = _AzureOpenAISettings2()
+    #azure_openai: _AzureOpenAISettings2 = _AzureOpenAISettings2()
     search: _SearchCommonSettings = _SearchCommonSettings()
     ui: Optional[_UiSettings] = _UiSettings()
     
@@ -862,3 +862,4 @@ class _AppSettings(BaseModel):
 
 
 app_settings = _AppSettings()
+azure_openai_settings = AzureOpenAISettings2()

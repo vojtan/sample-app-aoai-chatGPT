@@ -30,6 +30,7 @@ from backend.security.ms_defender_utils import get_msdefender_user_json
 from backend.history.cosmosdbservice import CosmosConversationClient
 from backend.settings import (
     app_settings,
+    azure_openai_settings,
     MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
 )
 from backend.utils import (
@@ -126,7 +127,7 @@ async def init_openai_client():
     try:
         # API version check
         if (
-            app_settings.azure_openai.preview_api_version
+            azure_openai_settings.preview_api_version
             < MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION
         ):
             raise ValueError(
@@ -135,21 +136,21 @@ async def init_openai_client():
 
         # Endpoint
         if (
-            not app_settings.azure_openai.endpoint and
-            not app_settings.azure_openai.resource
+            not azure_openai_settings.endpoint and
+            not azure_openai_settings.resource
         ):
             raise ValueError(
                 "AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_RESOURCE is required"
             )
 
         endpoint = (
-            app_settings.azure_openai.endpoint
-            if app_settings.azure_openai.endpoint
-            else f"https://{app_settings.azure_openai.resource}.openai.azure.com/"
+            azure_openai_settings.endpoint
+            if azure_openai_settings.endpoint
+            else f"https://{azure_openai_settings.resource}.openai.azure.com/"
         )
 
         # Authentication
-        aoai_api_key = app_settings.azure_openai.key
+        aoai_api_key = azure_openai_settings.key
         ad_token_provider = None
         if not aoai_api_key:
             logging.debug("No AZURE_OPENAI_KEY found, using Azure Entra ID auth")
@@ -160,7 +161,7 @@ async def init_openai_client():
                 )
 
         # Deployment
-        deployment = app_settings.azure_openai.model
+        deployment = azure_openai_settings.model
         if not deployment:
             raise ValueError("AZURE_OPENAI_MODEL is required")
 
@@ -168,7 +169,7 @@ async def init_openai_client():
         default_headers = {"x-ms-useragent": USER_AGENT}
 
         azure_openai_client = AsyncAzureOpenAI(
-            api_version=app_settings.azure_openai.preview_api_version,
+            api_version=azure_openai_settings.preview_api_version,
             api_key=aoai_api_key,
             azure_ad_token_provider=ad_token_provider,
             default_headers=default_headers,
@@ -216,13 +217,13 @@ async def init_cosmosdb_client():
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
-    if not app_settings.datasource:
-        messages = [
-            {
-                "role": "system",
-                "content": app_settings.azure_openai.system_message
-            }
-        ]
+    #if not app_settings.datasource:
+    messages = [
+        {
+            "role": "system",
+            "content": azure_openai_settings.system_message
+        }
+    ]
 
     for message in request_messages:
         if message:
@@ -243,18 +244,18 @@ def prepare_model_args(request_body, request_headers):
                     }
                 )
     
-    bing_custom_config_id = app_settings.azure_openai.bing_custom_config_id
-    bing_access_key = app_settings.azure_openai.bing_access_key
-    apiKey =  app_settings.azure_openai.key
-    endpoint =  app_settings.azure_openai.endpoint
+    bing_custom_config_id = azure_openai_settings.bing_custom_config_id
+    bing_access_key = azure_openai_settings.bing_access_key
+    apiKey =  azure_openai_settings.key
+    endpoint =  azure_openai_settings.endpoint
 
-    google_access_key = app_settings.azure_openai.google_access_key
-    google_search_engine_id = app_settings.azure_openai.google_search_engine_id
+    google_access_key = azure_openai_settings.google_access_key
+    google_search_engine_id = azure_openai_settings.google_search_engine_id
 
     search_client = SearchClient(
-                endpoint=  app_settings.azure_openai.embedding_endpoint,
-                index_name= app_settings.azure_openai.search_index,
-                credential=AzureKeyCredential(app_settings.azure_openai.embedding_key)
+                endpoint=  azure_openai_settings.embedding_endpoint,
+                index_name= azure_openai_settings.search_index,
+                credential=AzureKeyCredential(azure_openai_settings.embedding_key)
             )
 
     openAiClient = AzureOpenAI(
@@ -287,12 +288,12 @@ def prepare_model_args(request_body, request_headers):
 
     model_args = {
         "messages": messages,
-        "temperature": app_settings.azure_openai.temperature,
-        "max_tokens": app_settings.azure_openai.max_tokens,
-        "top_p": app_settings.azure_openai.top_p,
-        "stop": app_settings.azure_openai.stop_sequence,
-        "stream": app_settings.azure_openai.stream,
-        "model": app_settings.azure_openai.model,
+        "temperature": azure_openai_settings.temperature,
+        "max_tokens": azure_openai_settings.max_tokens,
+        "top_p": azure_openai_settings.top_p,
+        "stop": azure_openai_settings.stop_sequence,
+        "stream": azure_openai_settings.stream,
+        "model": azure_openai_settings.model,
         "user": user_json
     }
 
@@ -428,7 +429,7 @@ async def stream_chat_request(request_body, request_headers):
 
 async def conversation_internal(request_body, request_headers):
     try:
-        if app_settings.azure_openai.stream and not app_settings.base_settings.use_promptflow:
+        if azure_openai_settings.stream and not app_settings.base_settings.use_promptflow:
             result = await stream_chat_request(request_body, request_headers)
             response = await make_response(format_as_ndjson(result))
             response.timeout = None
@@ -915,7 +916,7 @@ async def generate_title(conversation_messages) -> str:
     try:
         azure_openai_client = await init_openai_client()
         response = await azure_openai_client.chat.completions.create(
-            model=app_settings.azure_openai.model, messages=messages, temperature=1, max_tokens=64
+            model=azure_openai_settings.model, messages=messages, temperature=1, max_tokens=64
         )
 
         title = response.choices[0].message.content
