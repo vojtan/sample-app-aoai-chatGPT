@@ -93,34 +93,34 @@ class _AzureOpenAITool(BaseModel):
     function: _AzureOpenAIFunction
     
 class AzureOpenAISettings2():
-    bing_access_key: Optional[str] = os.getenv("azure_openai_bing_access_key")
-    bing_custom_config_id: Optional[str] = os.getenv("azure_openai_bing_custom_config_id")
+    bing_access_key: Optional[str] = os.getenv("AZURE_OPENAI_BING_ACCESS_KEY")
+    bing_custom_config_id: Optional[str] = os.getenv("AZURE_OPENAI_BING_CUSTOM_CONFIG_ID")
     stream: bool = True
-    google_access_key: Optional[str] = os.getenv("azure_openai_google_access_key")
-    google_search_engine_id: Optional[str] = os.getenv("azure_openai_google_search_engine_id")
-    search_index: Optional[str] = os.getenv("azure_openai_search_index")
-    model: str = os.getenv("azure_openai_model")
-    key: Optional[str] = os.getenv("azure_openai_key")
-    resource: Optional[str] = os.getenv("azure_openai_resource")
-    endpoint: Optional[str] = os.getenv("azure_openai_endpoint")
-    temperature: float = float(os.getenv("azure_openai_temperature"))
-    top_p: float = float(os.getenv("azure_openai_top_p", 0.95))
-    max_tokens: int = int(os.getenv("azure_openai_max_tokens", 800))
-    stream: bool = bool(os.getenv("azure_openai_system_stream", True))
-    stop_sequence: Optional[List[str]] = os.getenv("azure_openai_stop_sequence", "").split(",") if os.getenv("azure_openai_stop_sequence") else None
-    seed: Optional[int] = int(os.getenv("azure_openai_seed", 0)) if os.getenv("azure_openai_seed") else None
+    google_access_key: Optional[str] = os.getenv("AZURE_OPENAI_GOOGLE_ACCESS_KEY")
+    google_search_engine_id: Optional[str] = os.getenv("AZURE_OPENAI_GOOGLE_SEARCH_ENGINE_ID")
+    search_index: Optional[str] = os.getenv("AZURE_OPENAI_SEARCH_INDEX")
+    model: str = os.getenv("AZURE_OPENAI_MODEL")
+    key: Optional[str] = os.getenv("AZURE_OPENAI_KEY")
+    resource: Optional[str] = os.getenv("AZURE_OPENAI_RESOURCE")
+    endpoint: Optional[str] = os.getenv("AZURE_OPENAI_ENDPOINT")
+    temperature: float = float(os.getenv("AZURE_OPENAI_TEMPERATURE"))
+    top_p: float = float(os.getenv("AZURE_OPENAI_TOP_P", 0.95))
+    max_tokens: int = int(os.getenv("AZURE_OPENAI_MAX_TOKENS", 800))
+    stream: bool = bool(os.getenv("AZURE_OPENAI_SYSTEM_STREAM", True))
+    stop_sequence: Optional[List[str]] = os.getenv("AZURE_OPENAI_STOP_SEQUENCE", "").split(",") if os.getenv("AZURE_OPENAI_STOP_SEQUENCE") else None
+    seed: Optional[int] = int(os.getenv("AZURE_OPENAI_SEED", 0)) if os.getenv("AZURE_OPENAI_SEED") else None
     choices_count: Optional[conint(ge=1, le=128)] = Field(default=1, serialization_alias="n")
-    user: Optional[str] = os.getenv("azure_openai_user", "default_user")
-    tools: Optional[List[str]] = os.getenv("azure_openai_tools", "").split(",") if os.getenv("azure_openai_tools") else None
-    tool_choice: Optional[str] = os.getenv("azure_openai_tool_choice", "default_tool")
-    logit_bias: Optional[dict] = eval(os.getenv("azure_openai_logit_bias", "{}"))
-    presence_penalty: Optional[confloat(ge=-2.0, le=2.0)] = float(os.getenv("azure_openai_presence_penalty", 0.0))
-    frequency_penalty: Optional[confloat(ge=-2.0, le=2.0)] = float(os.getenv("azure_openai_frequency_penalty", 0.0))
-    system_message: str = os.getenv("azure_openai_system_message", "Default system message")
-    preview_api_version: str = os.getenv("azure_openai_preview_api_version", MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION)
-    embedding_endpoint: Optional[str] = os.getenv("azure_openai_embedding_endpoint", "://default-endpoint")
-    embedding_key: Optional[str] = os.getenv("azure_openai_embedding_key", "")
-    embedding_name: Optional[str] = os.getenv("azure_openai_embedding_name", "")
+    user: Optional[str] = os.getenv("AZURE_OPENAI_USER", "default_user")
+    tools: Optional[List[str]] = os.getenv("AZURE_OPENAI_TOOLS", "").split(",") if os.getenv("AZURE_OPENAI_TOOLS") else None
+    tool_choice: Optional[str] = os.getenv("AZURE_OPENAI_TOOL_CHOICE", "default_tool")
+    logit_bias: Optional[dict] = eval(os.getenv("AZURE_OPENAI_LOGIT_BIAS", "{}"))
+    presence_penalty: Optional[confloat(ge=-2.0, le=2.0)] = float(os.getenv("AZURE_OPENAI_PRESENCE_PENALTY", 0.0))
+    frequency_penalty: Optional[confloat(ge=-2.0, le=2.0)] = float(os.getenv("AZURE_OPENAI_FREQUENCY_PENALTY", 0.0))
+    system_message: str = os.getenv("AZURE_OPENAI_SYSTEM_MESSAGE", "Default system message")
+    preview_api_version: str = os.getenv("AZURE_OPENAI_PREVIEW_API_VERSION", MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION)
+    embedding_endpoint: Optional[str] = os.getenv("AZURE_OPENAI_EMBEDDING_ENDPOINT", "://default-endpoint")
+    embedding_key: Optional[str] = os.getenv("AZURE_OPENAI_EMBEDDING_KEY", "")
+    embedding_name: Optional[str] = os.getenv("AZURE_OPENAI_EMBEDDING_NAME", "")
     
 class _AzureOpenAISettings():
     
