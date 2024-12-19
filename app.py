@@ -268,12 +268,12 @@ def prepare_model_args(request_body, request_headers):
     queryEngine = QueryEngine(openAiClient, search_client, bing_access_key, bing_custom_config_id, google_access_key, google_search_engine_id)
 
     user_query = queryEngine.refine_query(messages)
-    bingContext = queryEngine.search_google(user_query)
+    googleContext = queryEngine.search_google(user_query)
     azureContext = queryEngine.search_index(user_query)
     
     messages.append({
                          "role": "system",
-                         "content": f"Bing results: {bingContext}"
+                         "content": f"Google results: {googleContext}"
                      })
     messages.append({
                          "role": "system",

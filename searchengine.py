@@ -34,17 +34,17 @@ class QueryEngine:
         return parsed_results
 
     def refine_query(self, messages):
+        filteredMessages = list(filter(lambda obj: obj["role"] != 'system', messages))
         completion = self.openAiClient.chat.completions.create(
-            model="gpt-4o", 
+            model="gpt-4o-mini", 
             temperature=0.1,
             top_p=0.95,
             max_tokens=800,
 
-            # stream=
             messages = [
                 {"role": "system", "content": '''Analyze the user's latest message in the context of the conversation history. Identify the key information or action the user is requesting. Based on this, generate a clear and concise search query suitable for Bing to retrieve the relevant information. The query should include specific names, roles, locations, or any other details mentioned by the user, ensuring accuracy and relevance. 
                 Return the plain query, no additional information. Remove the quotation marks at the start and at the end'''},  
-                {"role": "user", "content": json.dumps(messages)}
+                {"role": "user", "content": json.dumps(filteredMessages)}
         ]
         )
 
@@ -55,7 +55,7 @@ class QueryEngine:
             "key": self.google_access_key,
             "cx": self.google_search_engine_id,
             "q": query,
-            "num": 10,
+            "num": 5,
         }
     
         response = requests.get(url, params=params)
