@@ -3,7 +3,7 @@ import json
 from azure.search.documents import SearchClient
 from azure.core.credentials import AzureKeyCredential
 from openai import AzureOpenAI
-
+from datetime import datetime
 class QueryEngine:
     def __init__(self, openAiClient, search_client, bing_access_key, custom_config_id, google_access_key, google_search_engine_id):
         self.search_client = search_client
@@ -35,15 +35,15 @@ class QueryEngine:
 
     def refine_query(self, messages):
         filteredMessages = list(filter(lambda obj: obj["role"] != 'system', messages))
+        formattedToday = datetime.today().strftime('%d.%m.%Y')
         completion = self.openAiClient.chat.completions.create(
-            model="gpt-4o-mini", 
+            model="gpt-4o", 
             temperature=0.1,
             top_p=0.95,
             max_tokens=800,
 
             messages = [
-                {"role": "system", "content": '''Analyze the user's latest message in the context of the conversation history. Identify the key information or action the user is requesting. Based on this, generate a clear and concise search query suitable for Bing to retrieve the relevant information. The query should include specific names, roles, locations, or any other details mentioned by the user, ensuring accuracy and relevance. 
-                Return the plain query, no additional information. Remove the quotation marks at the start and at the end'''},  
+                {"role": "system", "content": f'''Analyze the user's latest message in the context of the conversation history. Identify the key information or action the user is requesting. Based on this, generate a clear and concise search query suitable for Bing to retrieve the relevant information. The query should include specific names, roles, locations, or any other details mentioned by the user, ensuring accuracy and relevance.  Replace any time expressions (e.g., "today," "this weekend") with the corresponding actual dates in the format dd.mm.yyyy, today is {formattedToday}. The weekend should be returned in the format dd-dd.mm.yyyy.  Return the plain query, no additional information. '''},  
                 {"role": "user", "content": json.dumps(filteredMessages)}
         ]
         )
@@ -57,11 +57,14 @@ class QueryEngine:
             "q": query,
             "num": 5,
         }
-    
         response = requests.get(url, params=params)
         if response.status_code == 200:
             results =  response.json()
             return self.parse_google_results(results)
+        elif response.status_code in {403}:
+            raise RuntimeError(f"Chyba Google API. Bylo dosaženo limitu pro dnešní den. Zkuste to zítra.")
+        elif response.status_code in {400}:
+            raise RuntimeError(f"Google API Error: Received status code 400.")
         else:
             response.raise_for_status()
     
@@ -93,9 +96,9 @@ class QueryEngine:
 
     def search_index(self, user_query):
         query_vector = self.generate_embedding(user_query)
-        search_results = self.search_client.search(search_text=user_query, 
-                                        top=50,  
-                                        semantic_configuration_name = 'azureml-default',
+        search_results = self.search_client.search(
+                                        search_text=user_query, 
+                                        top=5,  
                                         vector_fields="contentVector",
                                         vector=query_vector,
                                         select = ['url', 'id', 'filepath', 'content']

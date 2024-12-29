@@ -121,8 +121,7 @@ const Chat = () => {
       setShowAuthMessage(false)
       return
     }
-    const userInfoList = await getUserInfo()
-    if (userInfoList.length === 0 && window.location.hostname !== '127.0.0.1') {
+    if (new URL(window.location.href).searchParams.get('guid') !== '60816663-29c7-4552-8ed3-3da358df129d') {
       setShowAuthMessage(true)
     } else {
       setShowAuthMessage(false)

@@ -44,6 +44,7 @@ from backend.utils import (
 from searchengine import (
     QueryEngine,
 )
+from datetime import datetime
 
 bp = Blueprint("routes", __name__, static_folder="static", template_folder="static")
 
@@ -218,10 +219,11 @@ def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
     #if not app_settings.datasource:
+    formattedToday = datetime.today().strftime('%d.%m.%Y')
     messages = [
         {
             "role": "system",
-            "content": azure_openai_settings.system_message
+            "content": azure_openai_settings.system_message + f"Today is {formattedToday}."
         }
     ]
 
